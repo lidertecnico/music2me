@@ -64,7 +64,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="36dp"
-        android:text="Agrega Canciones a tu PlayList"
+        android:text="@string/titulo_agregar_canciones"
         android:textSize="20sp"
         android:textAlignment="center"
         android:textColor="@color/white"

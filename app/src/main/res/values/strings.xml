@@ -11,4 +11,24 @@
     <string name="nombre_playlist_hint">Nombre de la Playlist</string>
     <string name="boton_agregar_playlist">Agregar Playlist</string>
     <string name="agregar_canciones_texto">Agrega canciones a tu lista de reproducción</string>
+    <!-- Nueva cadena agregada -->
+    <string name="titulo_agregar_canciones">Agrega Canciones a tu PlayList</string>
+    <!-- boton buscar canción -->
+    <string name="boton_buscar_cancion">Buscar Canción</string>"
+    <!-- Texto Archivo seleccionado -->
+    <string name="archivo_seleccionado_label">Archivo Seleccionado</string>
+    <!-- Boton Agregar archivo a la playlist -->
+    <string name="boton_agregar_archivo_playlist">Agregar a la Playlist</string>
+    <!-- Lista de canciones de la playlist -->
+    <string name="lista_canciones_playlist">Lista de Canciones de la Playlist</string>
+    <!-- Botón para agregar canción a la playlist-->
+    <string name="button_add_song_playlist_item">Agregar Canción"</string>
+    <!-- Titulo de de la canción -->
+    <string name="titulo_cancion">Título de la Canción"</string>
+    <!-- Nombre de la canción -->
+    <string name="nombre_cancion">Nombre de la Canción"</string>
+    <!-- Eliminar PlayList -->
+    <string name="eliminar_playlist">Eliminar Playlist</string>
+    <!-- Eliminar canción de la playlist -->
+    <string name="eliminar_cancion_playlist">Eliminar Canción de la Playlist</string>"
 </resources>

@@ -21,7 +21,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Botón para agregar canción -->
+    <!-- Botón para agregar playlist -->
     <Button
         android:id="@+id/btnAddSong"
         android:layout_width="0dp"
