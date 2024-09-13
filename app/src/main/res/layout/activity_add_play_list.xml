@@ -6,8 +6,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    android:padding="32dp"
+    android:padding="16dp"
     tools:context=".AddPlaylistActivity">
+
+    <TextView
+        android:id="@+id/tituloAplicacion"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:textColor="@color/primary_color"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="24dp"/>
 
     <TextView
         android:id="@+id/tituloAgregar"
@@ -19,7 +33,7 @@
         android:textStyle="bold"
         android:textAlignment="center"
         android:textColor="@color/white"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/tituloAplicacion" />
 
     <TextView
         android:id="@+id/tituloEditAgregar"

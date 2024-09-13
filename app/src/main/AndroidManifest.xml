@@ -37,9 +37,9 @@
         </activity>
 
         <!-- Registrar actividades adicionales -->
-        <activity android:name=".AddPlaylistActivity" />
+        <activity android:name=".AddPlaylistActivity"/>
+
         <activity android:name=".SongPlayActivity"
-            android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize"/>
 
         <activity android:name=".AddSongToPlaylistActivity" />

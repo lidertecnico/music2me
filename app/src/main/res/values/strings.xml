@@ -31,4 +31,6 @@
     <string name="eliminar_playlist">Eliminar Playlist</string>
     <!-- Eliminar canción de la playlist -->
     <string name="eliminar_cancion_playlist">Eliminar Canción de la Playlist</string>"
+    <!-- Texto Escuchar Canción -->
+    <string name="texto_escuchar_cancion">¡Escucha tu PlayList!</string>
 </resources>

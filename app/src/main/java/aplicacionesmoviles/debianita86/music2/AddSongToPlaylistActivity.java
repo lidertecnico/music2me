@@ -1,6 +1,7 @@
 package aplicacionesmoviles.debianita86.music2;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -70,6 +71,7 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_song_to_play_list);  // Establece el layout
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Inicialización de componentes de la interfaz
         btnSelectFile = findViewById(R.id.botonSeleccionarArchivo);  // Botón para seleccionar archivo

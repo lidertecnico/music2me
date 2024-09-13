@@ -1,6 +1,7 @@
 package aplicacionesmoviles.debianita86.music2;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -25,6 +26,7 @@ public class AddPlaylistActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_play_list);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Inicialización de los elementos de la interfaz, buscando los views por su ID
         inputNewPlaylist = findViewById(R.id.inputAgregarPlayList);  // Campo de texto para el nombre de playlist

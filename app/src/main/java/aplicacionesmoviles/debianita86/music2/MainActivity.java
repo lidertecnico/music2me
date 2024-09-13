@@ -2,6 +2,7 @@ package aplicacionesmoviles.debianita86.music2;
 
 import android.content.Intent;
 
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
 import android.widget.ArrayAdapter;
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);  // Establece el layout de la actividad principal
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // Inicialización de los componentes de la interfaz
         listViewPlaylists = findViewById(R.id.listasPlayListReproduccion);  // Lista de reproducción de playlists

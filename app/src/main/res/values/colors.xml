@@ -12,6 +12,8 @@
 
     <!-- Color primario para el botón -->
     <color name="primary_color">#FF5722</color>
+    <!-- Color Secundario -->
+    <color name="secundary_color">#9E7467</color>
 
     <!-- Color de fondo de las entradas de texto -->
     <color name="input_background">#424242</color>
