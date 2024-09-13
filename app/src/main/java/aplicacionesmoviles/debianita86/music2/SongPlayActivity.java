@@ -1,14 +1,19 @@
 package aplicacionesmoviles.debianita86.music2;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.ArrayAdapter;
@@ -20,6 +25,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -28,14 +35,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class SongPlayActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
+public class SongPlayActivity extends AppCompatActivity {
     private ListView listViewSongs;
     private String playlistName;
     private PlaylistDatabaseHelper dbHelper;
     private ArrayList<String> songPaths;
     private ArrayAdapter<String> adapter;
     private MediaPlayer mediaPlayer;
-    private static final int REQUEST_READ_EXTERNAL_STORAGE = 1;
+    private BluetoothAdapter bluetoothAdapter;
 
     // Views del CardView
     private ImageView albumCover;
@@ -44,6 +51,23 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
     private ImageButton btnPlay, btnNext, btnPrevious;
     private int currentSongIndex = 0; // Índice de la canción actual
     private boolean isPlaying = false; // Controlar si la canción está en pausa o en reproducción
+
+    // MediaSession para controlar los eventos multimedia
+    private MediaSession mediaSession;
+
+    private static final int REQUEST_READ_EXTERNAL_STORAGE = 1;
+
+    // ActivityResultLauncher para manejar la habilitación de Bluetooth
+    private ActivityResultLauncher<Intent> bluetoothActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Toast.makeText(this, "Bluetooth habilitado", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Bluetooth no habilitado", Toast.LENGTH_SHORT).show();
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,21 +99,79 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
         // Verificar y solicitar permisos de almacenamiento
         checkStoragePermission();
 
+        // Verificar Bluetooth
+        setupBluetooth();
+
         // Configurar botones de reproducción
         configurePlaybackControls();
+
         // Registrar el callback para manejar el botón "atrás"
         OnBackPressedCallback callback = new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Aquí manejamos la acción del botón atrás
                 Intent intent = new Intent(SongPlayActivity.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); // Evita múltiples instancias de MainActivity
                 startActivity(intent); // Inicia MainActivity
-                // No liberamos el MediaPlayer para que la música continúe
             }
         };
-        // Registrar el callback con el dispatcher
         getOnBackPressedDispatcher().addCallback(this, callback);
+
+        // Configurar la MediaSession para capturar los eventos de control de medios
+        setupMediaSession();
+    }
+
+    // Configurar Bluetooth y comprobar si está habilitado
+    private void setupBluetooth() {
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth no soportado en este dispositivo", Toast.LENGTH_SHORT).show();
+        } else if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            bluetoothActivityResultLauncher.launch(enableBtIntent);
+        }
+    }
+
+    // BroadcastReceiver para detectar conexión y desconexión de dispositivos Bluetooth
+    private final BroadcastReceiver bluetoothReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.d("BluetoothReceiver", "Action received: " + action);
+
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                Log.d("BluetoothReceiver", "Device connected");
+                Toast.makeText(context, "Dispositivo Bluetooth conectado", Toast.LENGTH_SHORT).show();
+                // Reproduce la canción actual al conectar el Bluetooth
+                if (!isPlaying && mediaPlayer != null) {
+                    playSong(songPaths.get(currentSongIndex));
+                }
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                Log.d("BluetoothReceiver", "Device disconnected");
+                Toast.makeText(context, "Dispositivo Bluetooth desconectado", Toast.LENGTH_SHORT).show();
+                // Pausar la canción cuando se desconecta el Bluetooth
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    btnPlay.setImageResource(R.drawable.ic_play); // Cambiar el botón a "play"
+                    isPlaying = false;
+                }
+            }
+        }
+    };
+
+    // Registrar y desregistrar el BroadcastReceiver en onResume y onPause
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        registerReceiver(bluetoothReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(bluetoothReceiver);
     }
 
     private void checkStoragePermission() {
@@ -97,7 +179,7 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
             if (!Environment.isExternalStorageManager()) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, REQUEST_READ_EXTERNAL_STORAGE);
+                bluetoothActivityResultLauncher.launch(intent); // Actualizado para usar ActivityResultLauncher
             } else {
                 loadSongs();
             }
@@ -112,45 +194,27 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_READ_EXTERNAL_STORAGE) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
-                loadSongs();
-            } else {
-                Toast.makeText(this, "Permiso no concedido", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQUEST_READ_EXTERNAL_STORAGE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                loadSongs();
-            } else {
-                Toast.makeText(this, "Permiso de almacenamiento denegado", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
     // Método para cargar las canciones de la base de datos
     private void loadSongs() {
         songPaths = dbHelper.getSongsFromPlaylist(playlistName); // Cargar las URIs desde la base de datos
+        ArrayList<String> songNames = new ArrayList<>();
 
-        // Mostrar las URIs directamente en el ListView
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, songPaths);
+        // Extraer solo los nombres de los archivos a partir de las rutas
+        for (String path : songPaths) {
+            songNames.add(new File(path).getName());
+        }
+
+        // Mostrar los nombres de los archivos en el ListView
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, songNames);
         listViewSongs.setAdapter(adapter);
 
         // Al seleccionar una canción, reproducirla y actualizar los detalles
         listViewSongs.setOnItemClickListener((parent, view, position, id) -> {
             currentSongIndex = position; // Actualizar el índice de la canción actual
-            playSong(songPaths.get(currentSongIndex));
+            playSong(songPaths.get(currentSongIndex)); // Mantener la ruta completa al reproducir la canción
         });
     }
+
 
     private void playSong(String songUriString) {
         Uri songUri = Uri.parse(songUriString);
@@ -176,7 +240,6 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
             });
 
             mediaPlayer.setOnCompletionListener(mp -> {
-                // Avanzar a la siguiente canción cuando la actual termine
                 if (currentSongIndex < songPaths.size() - 1) {
                     currentSongIndex++;
                     playSong(songPaths.get(currentSongIndex));
@@ -197,7 +260,6 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
         }
     }
 
-    // Actualizar la barra de progreso y los tiempos
     private void updateProgressBar() {
         songProgress.setMax(mediaPlayer.getDuration());
 
@@ -218,7 +280,6 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
             }
         }).start();
 
-        // Mover el SeekBar al cambiar su posición manualmente
         songProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -229,40 +290,29 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // No se necesita implementar nada aquí
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // No se necesita implementar nada aquí
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
         });
     }
 
-    private String formatTime(int millis) {
-        int minutes = (millis / 1000) / 60;
-        int seconds = (millis / 1000) % 60;
-        return String.format("%d:%02d", minutes, seconds);
-    }
-
-    // Configuración de los controles de reproducción
+    // Configurar los controles de reproducción
     private void configurePlaybackControls() {
         btnPlay.setOnClickListener(v -> {
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
-                btnPlay.setImageResource(R.drawable.ic_play); // Cambiar a icono de "play"
+                btnPlay.setImageResource(R.drawable.ic_play);
                 isPlaying = false;
             } else if (mediaPlayer != null) {
                 mediaPlayer.start();
-                btnPlay.setImageResource(R.drawable.ic_pause); // Cambiar a icono de "pausa"
+                btnPlay.setImageResource(R.drawable.ic_pause);
                 isPlaying = true;
                 updateProgressBar();
             }
         });
 
         btnNext.setOnClickListener(v -> {
-            // Pasar a la siguiente canción manualmente
             if (currentSongIndex < songPaths.size() - 1) {
                 currentSongIndex++;
                 playSong(songPaths.get(currentSongIndex));
@@ -272,7 +322,6 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
         });
 
         btnPrevious.setOnClickListener(v -> {
-            // Retroceder a la canción anterior manualmente
             if (currentSongIndex > 0) {
                 currentSongIndex--;
                 playSong(songPaths.get(currentSongIndex));
@@ -280,6 +329,64 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
                 Toast.makeText(this, "Ya estás en la primera canción", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    // Configurar MediaSession para capturar eventos de control de medios
+    private void setupMediaSession() {
+        // Crear una nueva MediaSession
+        mediaSession = new MediaSession(this, "MusicSession");
+
+        // Configurar el estado inicial (idle, es decir, no está reproduciendo)
+        PlaybackState.Builder stateBuilder = new PlaybackState.Builder()
+                .setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS);
+
+        mediaSession.setPlaybackState(stateBuilder.build());
+
+        // Asignar el callback para manejar eventos de control (play, pause, etc.)
+        mediaSession.setCallback(new MediaSession.Callback() {
+            @Override
+            public void onPlay() {
+                super.onPlay();
+                if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+                    mediaPlayer.start();
+                    btnPlay.setImageResource(R.drawable.ic_pause);
+                    isPlaying = true;
+                    updateProgressBar();
+                    mediaSession.setActive(true); // Activar la sesión cuando se reproduce
+                }
+            }
+
+            @Override
+            public void onPause() {
+                super.onPause();
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    btnPlay.setImageResource(R.drawable.ic_play);
+                    isPlaying = false;
+                }
+            }
+
+            @Override
+            public void onSkipToNext() {
+                super.onSkipToNext();
+                if (currentSongIndex < songPaths.size() - 1) {
+                    currentSongIndex++;
+                    playSong(songPaths.get(currentSongIndex));
+                }
+            }
+
+            @Override
+            public void onSkipToPrevious() {
+                super.onSkipToPrevious();
+                if (currentSongIndex > 0) {
+                    currentSongIndex--;
+                    playSong(songPaths.get(currentSongIndex));
+                }
+            }
+        });
+
+        // Activar la sesión para recibir eventos
+        mediaSession.setActive(true);
     }
 
     @Override
@@ -292,6 +399,17 @@ public class SongPlayActivity extends AppCompatActivity implements ActivityCompa
             mediaPlayer.release();
             mediaPlayer = null;
         }
+
+        // Liberar la MediaSession al destruir la actividad
+        if (mediaSession != null) {
+            mediaSession.setActive(false);
+            mediaSession.release();
+        }
     }
 
+    private String formatTime(int millis) {
+        int minutes = (millis / 1000) / 60;
+        int seconds = (millis / 1000) % 60;
+        return String.format("%d:%02d", minutes, seconds);
+    }
 }

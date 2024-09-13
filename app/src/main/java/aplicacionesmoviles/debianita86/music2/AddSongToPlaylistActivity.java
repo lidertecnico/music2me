@@ -56,7 +56,15 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
         playlistName = getIntent().getStringExtra("playlistName");
 
         songs = dbHelper.getSongsFromPlaylist(playlistName);
-        SongAdapter adapter = new SongAdapter(this, songs, dbHelper, playlistName);
+        ArrayList<String> songNames = new ArrayList<>();
+
+        // Extraer los nombres de los archivos a partir de las rutas
+        for (String path : songs) {
+            songNames.add(new File(path).getName());
+        }
+
+        // Actualizar el adaptador con los nombres de los archivos
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, songNames);
         listView.setAdapter(adapter);
 
         checkReadPermission();
@@ -79,7 +87,14 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
                         dbHelper.addSongToPlaylist(playlistName, savedPath); // Guardar la ruta del archivo
                         songs.clear();
                         songs.addAll(dbHelper.getSongsFromPlaylist(playlistName));
+
+                        // Actualizar la lista de nombres de archivos y el adaptador
+                        songNames.clear();
+                        for (String path : songs) {
+                            songNames.add(new File(path).getName());
+                        }
                         adapter.notifyDataSetChanged();
+
                         Toast.makeText(this, "Canción añadida a la playlist", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(this, "Error al guardar el archivo", Toast.LENGTH_SHORT).show();
@@ -93,6 +108,7 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
             }
         });
     }
+
 
     // Manejo de la actividad de selección de archivo
     @Override
