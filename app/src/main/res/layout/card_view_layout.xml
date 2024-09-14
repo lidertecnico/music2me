@@ -38,7 +38,7 @@
             android:layout_gravity="center"
             android:text="@string/titulo_cancion"
             android:textColor="@color/black"
-            android:textSize="22sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginTop="12dp"
             android:gravity="center"/>
@@ -51,7 +51,7 @@
             android:layout_gravity="center"
             android:text="@string/nombre_cancion"
             android:textColor="@color/black"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:layout_marginTop="4dp"
             android:gravity="center"/>
 
@@ -113,8 +113,8 @@
 
             <ImageButton
                 android:id="@+id/btn_play"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="54dp"
+                android:layout_height="54dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_play"
                 android:layout_marginStart="60dp" />

@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
@@ -242,6 +245,42 @@ public class SongPlayActivity extends AppCompatActivity {
         try {
             Log.d("SongPath", "Reproduciendo: " + songUri.toString());
 
+            // Actualiza el título de la canción y el artista
+            File songFile = new File(songUri.getPath());
+            String songName = songFile.getName();
+            String artist = "Artista Desconocido"; // Por si no puedes extraer el artista
+
+            if (songName.contains("-")) {
+                // Si el nombre de la canción contiene un guión, separamos el nombre y el artista
+                String[] parts = songName.split("-");
+                artist = parts[0].trim();
+                songName = parts[1].trim();
+            }
+
+            // Limita el nombre de la canción y el artista a 20 caracteres si es muy largo
+            if (songName.length() > 20) {
+                songName = songName.substring(0, 20) + "...";
+            }
+            if (artist.length() > 20) {
+                artist = artist.substring(0, 20) + "...";
+            }
+
+            songTitle.setText(songName);
+            artistName.setText(artist);
+
+            // Extrae la carátula del álbum usando MediaMetadataRetriever
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            retriever.setDataSource(songUri.getPath());
+            byte[] art = retriever.getEmbeddedPicture();
+            if (art != null) {
+                Bitmap albumArt = BitmapFactory.decodeByteArray(art, 0, art.length);
+                albumCover.setImageBitmap(albumArt);
+            } else {
+                // Si no se encuentra una imagen, usa una predeterminada
+                albumCover.setImageResource(R.drawable.ic_neo);
+            }
+            retriever.release();
+
             // Configura el MediaPlayer con la URI de la canción
             mediaPlayer.setDataSource(getApplicationContext(), songUri);
             mediaPlayer.prepareAsync(); // Prepara la reproducción de manera asíncrona
@@ -274,6 +313,7 @@ public class SongPlayActivity extends AppCompatActivity {
             Toast.makeText(this, "Error al reproducir la canción", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     // Método para actualizar la barra de progreso de la canción
     private void updateProgressBar() {

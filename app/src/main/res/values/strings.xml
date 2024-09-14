@@ -33,4 +33,6 @@
     <string name="eliminar_cancion_playlist">Eliminar Canción de la Playlist</string>"
     <!-- Texto Escuchar Canción -->
     <string name="texto_escuchar_cancion">¡Escucha tu PlayList!</string>
+    <!-- Pie de Pagina -->
+    <string name="pie_pagina">\@DiegoDebian2024 profediegoparra01@gmail.com</string>
 </resources>
