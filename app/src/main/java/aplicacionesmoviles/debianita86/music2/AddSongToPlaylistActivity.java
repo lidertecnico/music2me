@@ -39,7 +39,7 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
     private PlaylistDatabaseHelper dbHelper;  // Ayudante de base de datos para gestionar playlists
     private String playlistName;  // Nombre de la playlist actual
     private ListView listView;  // Lista de canciones en la playlist
-    private ArrayAdapter<String> adapter;  // Adaptador para mostrar la lista de canciones
+    private SongAdapter adapter;  // Adaptador para mostrar la lista de canciones
     private ArrayList<String> songs;  // Lista de rutas de canciones
 
     // Lanzador de actividad para seleccionar archivo, reemplaza onActivityResult
@@ -84,15 +84,9 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
 
         // Carga las canciones de la playlist desde la base de datos
         songs = dbHelper.getSongsFromPlaylist(playlistName);
-        ArrayList<String> songNames = new ArrayList<>();
 
-        // Obtiene los nombres de las canciones de sus rutas
-        for (String path : songs) {
-            songNames.add(new File(path).getName());
-        }
-
-        // Inicializa el adaptador con las canciones
-        adapter = new SongAdapter(this, songNames, dbHelper, playlistName);
+        // Inicializa el adaptador con las canciones (pasa la lista de rutas completas)
+        adapter = new SongAdapter(this, songs, dbHelper, playlistName);
         listView.setAdapter(adapter);  // Asocia el adaptador al ListView
 
         checkReadPermission();  // Verifica permisos de lectura
@@ -117,10 +111,6 @@ public class AddSongToPlaylistActivity extends AppCompatActivity {
                         songs.clear();  // Limpia la lista de canciones actual
                         songs.addAll(dbHelper.getSongsFromPlaylist(playlistName));  // Carga todas las canciones de nuevo
 
-                        songNames.clear();  // Limpia los nombres de las canciones
-                        for (String path : songs) {
-                            songNames.add(new File(path).getName());  // Añade los nombres de las canciones
-                        }
                         adapter.notifyDataSetChanged();  // Notifica que los datos han cambiado
 
                         Toast.makeText(this, "Canción añadida a la playlist", Toast.LENGTH_SHORT).show();  // Mensaje de éxito

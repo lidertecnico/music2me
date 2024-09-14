@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -113,18 +114,31 @@ public class PlaylistDatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Método para eliminar una canción de una playlist específica
-    public void deleteSongFromPlaylist(String playlistName, String filePath) {
-        SQLiteDatabase db = this.getWritableDatabase();  // Obtén la base de datos en modo escritura
-
-        // Consulta SQL para obtener el ID de la playlist dado su nombre
+    public boolean deleteSongFromPlaylist(String playlistName, String filePath) {
+        SQLiteDatabase db = this.getWritableDatabase();
         String playlistIdQuery = "SELECT id FROM playlists WHERE name = ?";
-        Cursor cursor = db.rawQuery(playlistIdQuery, new String[]{playlistName});  // Ejecuta la consulta
+        Cursor cursor = db.rawQuery(playlistIdQuery, new String[]{playlistName});
+        boolean isDeleted = false;
 
-        // Si se encuentra la playlist, elimina la canción de la tabla songs
         if (cursor.moveToFirst()) {
-            int playlistId = cursor.getInt(0);  // Obtén el ID de la playlist
-            db.delete("songs", "playlist_id = ? AND file_path = ?", new String[]{String.valueOf(playlistId), filePath});  // Elimina la canción
+            int playlistId = cursor.getInt(0);
+            Log.d("PlaylistDatabaseHelper", "Playlist ID: " + playlistId);
+
+            // Elimina la canción de la tabla 'songs'
+            int rowsAffected = db.delete("songs", "playlist_id = ? AND file_path = ?", new String[]{String.valueOf(playlistId), filePath});
+            Log.d("PlaylistDatabaseHelper", "Rows affected: " + rowsAffected);
+            Log.d("deleteSongFromPlaylist", "Playlist Name: " + playlistName);
+            Log.d("deleteSongFromPlaylist", "File Path: " + filePath);
+
+            // Si se afectó al menos una fila, la eliminación fue exitosa
+            if (rowsAffected > 0) {
+                isDeleted = true;
+            }
         }
-        cursor.close();  // Cierra el cursor después de usarlo
+
+        cursor.close();
+        return isDeleted; // Devuelve true si la eliminación fue exitosa
     }
+
+
 }

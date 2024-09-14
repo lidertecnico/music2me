@@ -1,6 +1,7 @@
 package aplicacionesmoviles.debianita86.music2;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class SongAdapter extends ArrayAdapter<String> {
@@ -46,21 +48,31 @@ public class SongAdapter extends ArrayAdapter<String> {
         Button deleteButton = convertView.findViewById(R.id.btn_delete_song);
 
         // Obtén la canción actual de la lista en la posición especificada
-        String currentSong = songs.get(position);
+        String songPath = songs.get(position);
+        String currentSongName = new File(songPath).getName();
 
         // Establece el nombre de la canción en el TextView correspondiente
-        songName.setText(currentSong);
+        songName.setText(currentSongName);
 
         // Configura el botón de eliminar para que, al hacer clic, elimine la canción de la playlist y la base de datos
         deleteButton.setOnClickListener(v -> {
             // Elimina la canción de la base de datos usando el nombre de la playlist y la ruta de la canción
-            dbHelper.deleteSongFromPlaylist(playlistName, currentSong);
-            // Elimina la canción de la lista de la interfaz
-            songs.remove(position);
-            // Notifica al adaptador que los datos han cambiado para actualizar la vista
-            notifyDataSetChanged();
-            // Muestra un mensaje confirmando que la canción fue eliminada
-            Toast.makeText(context, "Canción eliminada", Toast.LENGTH_SHORT).show();
+            boolean isDeleted = dbHelper.deleteSongFromPlaylist(playlistName, songPath);
+
+            if (isDeleted) {
+                // Elimina la canción de la lista de la interfaz
+                songs.remove(position);
+                // Notifica al adaptador que los datos han cambiado para actualizar la vista
+                notifyDataSetChanged();
+                // Muestra un mensaje confirmando que la canción fue eliminada
+                Toast.makeText(context, "Canción eliminada", Toast.LENGTH_SHORT).show();
+            } else {
+                // Si la eliminación falla, muestra un mensaje de error
+                Toast.makeText(context, "Error al eliminar la canción", Toast.LENGTH_SHORT).show();
+            }
+
+            // Log para depuración
+            Log.d("SongAdapter", "Eliminando canción: " + songPath + ", Resultado: " + isDeleted);
         });
 
         // Retorna la vista configurada para este ítem
