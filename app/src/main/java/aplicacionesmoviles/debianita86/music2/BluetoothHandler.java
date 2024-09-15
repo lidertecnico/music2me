@@ -2,6 +2,7 @@ package aplicacionesmoviles.debianita86.music2;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +17,9 @@ public class BluetoothHandler {
     private static BroadcastReceiver bluetoothReceiver;
 
     public static void setupBluetooth(Context context, ActivityResultLauncher<Intent> launcher) {
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        bluetoothAdapter = bluetoothManager.getAdapter();
+
         if (bluetoothAdapter == null) {
             Toast.makeText(context, "Bluetooth no soportado en este dispositivo", Toast.LENGTH_SHORT).show();
         } else if (!bluetoothAdapter.isEnabled()) {
@@ -26,7 +29,6 @@ public class BluetoothHandler {
 
         setupReceiver(context);
     }
-
     private static void setupReceiver(Context context) {
         bluetoothReceiver = new BroadcastReceiver() {
             @Override
