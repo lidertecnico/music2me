@@ -15,6 +15,9 @@
     <!-- Color Secundario -->
     <color name="secundary_color">#9E7467</color>
 
+    <!-- Playing color para el item que se reproduce -->
+    <color name="playing_color">#D5C645</color> <!-- Color que prefieras -->
+
     <!-- Color de fondo de las entradas de texto -->
     <color name="input_background">#424242</color>
 
